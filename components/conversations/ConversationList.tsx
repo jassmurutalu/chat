@@ -1,44 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { MessageSquare, Search } from 'lucide-react'
+import { MessageSquare, Search, Loader2 } from 'lucide-react'
 import ConversationItem from './ConversationItem'
-import type { Conversation } from '@/lib/types/database'
+import { useConversations } from '@/lib/hooks/useConversations'
 
 export default function ConversationList() {
   const [searchQuery, setSearchQuery] = useState('')
-  
-  // Mock data for now - we'll replace with real data later
-  const mockConversations: Conversation[] = [
-    {
-      id: '1',
-      platform: 'telegram',
-      customer_name: 'John Doe',
-      customer_id: '123456',
-      customer_avatar: null,
-      last_message: 'Hello, I need help with my order',
-      last_message_at: new Date().toISOString(),
-      unread_count: 2,
-      assigned_to: null,
-      status: 'active',
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      platform: 'messenger',
-      customer_name: 'Jane Smith',
-      customer_id: '789012',
-      customer_avatar: null,
-      last_message: 'Thanks for your help!',
-      last_message_at: new Date(Date.now() - 3600000).toISOString(),
-      unread_count: 0,
-      assigned_to: null,
-      status: 'active',
-      created_at: new Date(Date.now() - 7200000).toISOString(),
-    },
-  ]
+  const { conversations, loading } = useConversations()
 
-  const filteredConversations = mockConversations.filter(conv =>
+  const filteredConversations = conversations.filter(conv =>
     conv.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -60,10 +31,18 @@ export default function ConversationList() {
 
       {/* Conversations list */}
       <div className="flex-1 overflow-y-auto">
-        {filteredConversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          </div>
+        ) : filteredConversations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4">
             <MessageSquare className="h-12 w-12 mb-2" />
-            <p>No conversations</p>
+            <p className="text-center">
+              {conversations.length === 0
+                ? 'No conversations yet'
+                : 'No conversations match your search'}
+            </p>
           </div>
         ) : (
           filteredConversations.map((conversation) => (
