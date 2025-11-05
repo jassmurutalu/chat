@@ -78,7 +78,7 @@ export async function deleteTelegramWebhook(botToken: string) {
   return response.json()
 }
 
-export function getTelegramUserName(user: TelegramUpdate['message']['from']) {
+export function getTelegramUserName(user: NonNullable<TelegramUpdate['message']>['from']) {
   if (user.username) return `@${user.username}`
   return [user.first_name, user.last_name].filter(Boolean).join(' ')
 }

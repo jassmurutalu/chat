@@ -2,14 +2,17 @@ import { createClient } from '@supabase/supabase-js'
 import { getTelegramUserName } from '@/lib/platforms/telegram'
 import type { TelegramUpdate } from '@/lib/platforms/telegram'
 
-// Initialize Supabase with service role key for webhook
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function POST(request: Request) {
   try {
+    // Initialize Supabase with service role key for webhook
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key'
+
+    const supabase = createClient(
+      supabaseUrl,
+      supabaseServiceKey
+    )
+
     const update: TelegramUpdate = await request.json()
     
     console.log('Telegram webhook received:', JSON.stringify(update, null, 2))
