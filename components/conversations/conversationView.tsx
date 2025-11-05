@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useMessages } from '@/lib/hooks/useMessages'
 import { useSendMessage } from '@/lib/hooks/useSendMessage'
+import { useConversationsContext } from '@/lib/contexts/ConversationsContext'
 import MessageList from '@/components/messages/MessageList'
 import MessageInput from '@/components/messages/MessageInput'
 import { Loader2 } from 'lucide-react'
@@ -19,6 +20,7 @@ export default function ConversationView({
 }: Props) {
   const { messages, loading } = useMessages(conversation.id)
   const { sendMessage } = useSendMessage()
+  const { markConversationAsRead } = useConversationsContext()
 
   // Mark conversation as read when opened
   useEffect(() => {
@@ -26,12 +28,17 @@ export default function ConversationView({
   }, [conversation.id])
 
   async function markAsRead() {
+    // Optimistically update the UI immediately
+    markConversationAsRead(conversation.id)
+
+    // Then update the database
     try {
       await fetch(`/api/conversations/${conversation.id}/mark-read`, {
         method: 'POST',
       })
     } catch (error) {
       console.error('Error marking as read:', error)
+      // Could revert the optimistic update here if needed
     }
   }
 

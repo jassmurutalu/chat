@@ -63,5 +63,13 @@ export function useConversations() {
     }
   }
 
-  return { conversations, loading }
+  function markConversationAsRead(conversationId: string) {
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.id === conversationId ? { ...conv, unread_count: 0 } : conv
+      )
+    )
+  }
+
+  return { conversations, loading, markConversationAsRead }
 }

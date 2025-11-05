@@ -1,4 +1,5 @@
 import ConversationList from '@/components/conversations/ConversationList'
+import { ConversationsProvider } from '@/lib/contexts/ConversationsContext'
 
 export default function ConversationsLayout({
   children,
@@ -6,11 +7,13 @@ export default function ConversationsLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex h-full">
-      <ConversationList />
-      <div className="flex-1">
-        {children}
+    <ConversationsProvider>
+      <div className="flex h-full">
+        <ConversationList />
+        <div className="flex-1">
+          {children}
+        </div>
       </div>
-    </div>
+    </ConversationsProvider>
   )
 }
