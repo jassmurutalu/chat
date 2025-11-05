@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { sendTelegramMessage, sendTelegramPhoto, sendTelegramDocument } from '@/lib/platforms/telegram'
+import { sendMessengerMessage } from '@/lib/platforms/messenger'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -61,6 +62,10 @@ export async function POST(request: Request) {
     }
     // Add other platforms here later (messenger, whatsapp)
 
+    if (conversation.platform === 'messenger') {
+  const pageAccessToken = process.env.MESSENGER_PAGE_ACCESS_TOKEN!
+  await sendMessengerMessage(conversation.customer_id, content, pageAccessToken)
+}
     // Only save message to database after successful platform delivery
     const { data: message, error: messageError } = await supabase
       .from('messages')
