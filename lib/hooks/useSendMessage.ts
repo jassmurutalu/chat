@@ -1,30 +1,32 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
 import type { Message } from '@/lib/types/database'
 
 export function useSendMessage() {
-  const supabase = createClient()
-
   async function sendMessage(
     conversationId: string,
     content: string,
     userId: string
   ): Promise<Message> {
-    const { data, error } = await supabase
-      .from('messages')
-      .insert({
-        conversation_id: conversationId,
-        sender_type: 'agent',
-        sender_id: userId,
+    const response = await fetch('/api/messages/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        conversationId,
         content,
-        message_type: 'text',
-      })
-      .select()
-      .single()
+        userId,
+      }),
+    })
 
-    if (error) throw error
-    return data
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to send message')
+    }
+
+    const data = await response.json()
+    return data.message
   }
 
   return { sendMessage }
