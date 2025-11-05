@@ -8,13 +8,17 @@ export async function POST(request: Request) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key'
 
+    console.log('[Webhook] Starting webhook handler')
+    console.log('[Webhook] Supabase URL available:', !!supabaseUrl && supabaseUrl !== 'https://placeholder.supabase.co')
+    console.log('[Webhook] Service key available:', !!supabaseServiceKey && supabaseServiceKey !== 'placeholder-service-key')
+
     const supabase = createClient(
       supabaseUrl,
       supabaseServiceKey
     )
 
     const update: TelegramUpdate = await request.json()
-    
+
     console.log('Telegram webhook received:', JSON.stringify(update, null, 2))
 
     // Only process messages (ignore other update types)
