@@ -23,26 +23,35 @@ export function useConversations() {
           table: 'conversations',
         },
         (payload) => {
-          console.log('Conversation change:', payload)
-          
+          console.log('Conversation change received:', payload)
+
           if (payload.eventType === 'INSERT') {
+            console.log('Adding new conversation:', payload.new)
             setConversations((prev) => [payload.new as Conversation, ...prev])
           } else if (payload.eventType === 'UPDATE') {
+            console.log('Updating conversation:', payload.new)
             setConversations((prev) =>
               prev.map((conv) =>
                 conv.id === payload.new.id ? (payload.new as Conversation) : conv
               )
             )
           } else if (payload.eventType === 'DELETE') {
+            console.log('Deleting conversation:', payload.old)
             setConversations((prev) =>
               prev.filter((conv) => conv.id !== payload.old.id)
             )
           }
         }
       )
-      .subscribe()
+      .subscribe((status, err) => {
+        console.log('Conversations subscription status:', status)
+        if (err) {
+          console.error('Subscription error:', err)
+        }
+      })
 
     return () => {
+      console.log('Unsubscribing from conversations channel')
       channel.unsubscribe()
     }
   }, [])
