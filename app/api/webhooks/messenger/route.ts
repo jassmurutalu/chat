@@ -110,17 +110,36 @@ async function handleMessage(event: any) {
 
 async function fetchMessengerProfile(userId: string) {
   try {
-    const token = process.env.MESSENGER_PAGE_ACCESS_TOKEN!
-    const response = await fetch(
-      `https://graph.facebook.com/${userId}?fields=first_name,last_name,profile_pic&access_token=${token}`
-    )
+    const token = process.env.MESSENGER_PAGE_ACCESS_TOKEN
 
-    if (!response.ok) {
-      console.error('Failed to fetch Messenger profile:', await response.text())
+    console.log('Fetching Messenger profile:', {
+      userId,
+      hasToken: !!token,
+      tokenLength: token?.length || 0
+    })
+
+    if (!token) {
+      console.error('MESSENGER_PAGE_ACCESS_TOKEN is not set')
       return { first_name: 'Unknown', last_name: 'User' }
     }
 
-    return response.json()
+    const url = `https://graph.facebook.com/${userId}?fields=first_name,last_name,profile_pic&access_token=${token}`
+    const response = await fetch(url)
+    const responseText = await response.text()
+
+    console.log('Profile API response:', {
+      status: response.status,
+      body: responseText
+    })
+
+    if (!response.ok) {
+      console.error('Failed to fetch Messenger profile:', responseText)
+      return { first_name: 'Unknown', last_name: 'User' }
+    }
+
+    const data = JSON.parse(responseText)
+    console.log('Profile data:', data)
+    return data
   } catch (error) {
     console.error('Error fetching Messenger profile:', error)
     return { first_name: 'Unknown', last_name: 'User' }
