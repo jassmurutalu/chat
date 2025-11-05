@@ -35,15 +35,14 @@ export default function ConversationView({
     }
   }
 
-  const handleSendMessage = async (content: string) => {
-    try {
-      await sendMessage(conversation.id, content, currentUserId)
-      // Message will appear automatically via real-time subscription
-    } catch (error) {
-      console.error('Failed to send message:', error)
-      alert('Failed to send message. Please try again.')
-    }
+  const handleSendMessage = async (content: string, fileUrl?: string) => {
+  try {
+    await sendMessage(conversation.id, content, currentUserId, fileUrl)
+  } catch (error) {
+    console.error('Failed to send message:', error)
+    alert('Failed to send message. Please try again.')
   }
+}
 
   const platformEmojis = {
     telegram: '✈️',

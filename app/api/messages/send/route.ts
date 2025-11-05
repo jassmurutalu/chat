@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { sendTelegramMessage } from '@/lib/platforms/telegram'
+import { sendTelegramMessage, sendTelegramPhoto, sendTelegramDocument } from '@/lib/platforms/telegram'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,9 +8,10 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { conversationId, content, userId } = await request.json()
+    // Add fileUrl handling
+    const { conversationId, content, userId, fileUrl } = await request.json()
 
-    if (!conversationId || !content || !userId) {
+    if (!conversationId || (!content && !fileUrl) || !userId) {
       return Response.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -31,13 +32,25 @@ export async function POST(request: Request) {
       )
     }
 
+    // Determine message type
+    let messageType: 'text' | 'image' | 'file' = 'text'
+    if (fileUrl) {
+      messageType = fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? 'image' : 'file'
+    }
+
     // Send to platform first - fail fast if delivery fails
     if (conversation.platform === 'telegram') {
       const botToken = process.env.TELEGRAM_BOT_TOKEN!
       const chatId = parseInt(conversation.customer_id)
 
       try {
-        await sendTelegramMessage(chatId, content, botToken)
+        if (messageType === 'image' && fileUrl) {
+          await sendTelegramPhoto(chatId, fileUrl, content || undefined, botToken)
+        } else if (messageType === 'file' && fileUrl) {
+          await sendTelegramDocument(chatId, fileUrl, content || undefined, botToken)
+        } else {
+          await sendTelegramMessage(chatId, content, botToken)
+        }
       } catch (error) {
         console.error('Error sending to Telegram:', error)
         return Response.json(
@@ -56,7 +69,8 @@ export async function POST(request: Request) {
         sender_type: 'agent',
         sender_id: userId,
         content,
-        message_type: 'text',
+        message_type: messageType,
+        file_url: fileUrl,
       })
       .select()
       .single()

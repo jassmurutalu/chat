@@ -6,7 +6,8 @@ export function useSendMessage() {
   async function sendMessage(
     conversationId: string,
     content: string,
-    userId: string
+    userId: string,
+    fileUrl?: string
   ): Promise<Message> {
     const response = await fetch('/api/messages/send', {
       method: 'POST',
@@ -17,6 +18,7 @@ export function useSendMessage() {
         conversationId,
         content,
         userId,
+        fileUrl,
       }),
     })
 
