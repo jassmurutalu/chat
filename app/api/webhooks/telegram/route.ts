@@ -36,6 +36,13 @@ export async function POST(request: Request) {
       .single()
 
     if (convError || !conversation) {
+      // Auto-assign to first available user
+      const { data: user } = await supabase
+        .from('users')
+        .select('id')
+        .limit(1)
+        .single()
+
       // Create new conversation
       const { data: newConversation, error: createError } = await supabase
         .from('conversations')
@@ -47,6 +54,7 @@ export async function POST(request: Request) {
           last_message_at: new Date(message.date * 1000).toISOString(),
           unread_count: 1,
           status: 'active',
+          assigned_to: user?.id, // Auto-assign to first user if available
         })
         .select()
         .single()
