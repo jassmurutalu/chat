@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useMessages } from '@/lib/hooks/useMessages'
 import { useSendMessage } from '@/lib/hooks/useSendMessage'
 import MessageList from '@/components/messages/MessageList'
@@ -18,6 +19,21 @@ export default function ConversationView({
 }: Props) {
   const { messages, loading } = useMessages(conversation.id)
   const { sendMessage } = useSendMessage()
+
+  // Mark conversation as read when opened
+  useEffect(() => {
+    markAsRead()
+  }, [conversation.id])
+
+  async function markAsRead() {
+    try {
+      await fetch(`/api/conversations/${conversation.id}/mark-read`, {
+        method: 'POST',
+      })
+    } catch (error) {
+      console.error('Error marking as read:', error)
+    }
+  }
 
   const handleSendMessage = async (content: string) => {
     try {

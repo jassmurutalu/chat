@@ -11,32 +11,46 @@ type Props = {
 export default function MessageInput({ conversationId, onSendMessage }: Props) {
   const [message, setMessage] = useState('')
   const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const sendMessageHandler = async () => {
     if (!message.trim() || sending) return
 
     setSending(true)
+    setError('')
+
     try {
       await onSendMessage(message.trim())
       setMessage('')
     } catch (error) {
       console.error('Failed to send message:', error)
-      alert('Failed to send message')
+      setError('Failed to send message. Please try again.')
     } finally {
       setSending(false)
     }
   }
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await sendMessageHandler()
+  }
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleSubmit(e)
+      sendMessageHandler()
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-t border-gray-200 bg-white p-4">
+    <>
+      {error && (
+        <div className="bg-red-50 text-red-600 px-4 py-2 text-sm">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="border-t border-gray-200 bg-white p-4">
       <div className="flex items-end gap-2">
         <button
           type="button"
@@ -68,5 +82,6 @@ export default function MessageInput({ conversationId, onSendMessage }: Props) {
         Press Enter to send, Shift+Enter for new line
       </p>
     </form>
+    </>
   )
 }
