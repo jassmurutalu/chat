@@ -3,11 +3,11 @@
 import { useState } from 'react'
 import { MessageSquare, Search, Loader2 } from 'lucide-react'
 import ConversationItem from './ConversationItem'
-import { useConversations } from '@/lib/hooks/useConversations'
+import { useConversationsContext } from '@/lib/contexts/ConversationsContext'
 
 export default function ConversationList() {
   const [searchQuery, setSearchQuery] = useState('')
-  const { conversations, loading } = useConversations()
+  const { conversations, loading } = useConversationsContext()
 
   const filteredConversations = conversations.filter(conv =>
     conv.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
