@@ -2,13 +2,21 @@ import { createClient } from '@supabase/supabase-js'
 import { getTelegramUserName } from '@/lib/platforms/telegram'
 import type { TelegramUpdate } from '@/lib/platforms/telegram'
 
+// Configure the route
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: Request) {
+  console.log('[Webhook] POST handler called - START')
+
   try {
+    console.log('[Webhook] Inside try block')
+
     // Initialize Supabase with service role key for webhook
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key'
 
-    console.log('[Webhook] Starting webhook handler')
+    console.log('[Webhook] Env vars loaded')
     console.log('[Webhook] Supabase URL available:', !!supabaseUrl && supabaseUrl !== 'https://placeholder.supabase.co')
     console.log('[Webhook] Service key available:', !!supabaseServiceKey && supabaseServiceKey !== 'placeholder-service-key')
 
@@ -17,8 +25,11 @@ export async function POST(request: Request) {
       supabaseServiceKey
     )
 
+    console.log('[Webhook] Supabase client created')
+
     const update: TelegramUpdate = await request.json()
 
+    console.log('[Webhook] Request parsed')
     console.log('Telegram webhook received:', JSON.stringify(update, null, 2))
 
     // Only process messages (ignore other update types)
