@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useMessages } from '@/lib/hooks/useMessages'
 import { useSendMessage } from '@/lib/hooks/useSendMessage'
 import { useConversationsContext } from '@/lib/contexts/ConversationsContext'
@@ -22,19 +22,7 @@ export default function ConversationView({
   const { sendMessage } = useSendMessage()
   const { markConversationAsRead } = useConversationsContext()
 
-  // Mark conversation as read when opened
-  useEffect(() => {
-    markAsRead()
-  }, [conversation.id])
-
-  // Mark as read when new messages arrive while viewing this conversation
-  useEffect(() => {
-    if (messages.length > 0 && !loading) {
-      markAsRead()
-    }
-  }, [messages.length])
-
-  async function markAsRead() {
+  const markAsRead = useCallback(async () => {
     // Optimistically update the UI immediately
     markConversationAsRead(conversation.id)
 
@@ -47,7 +35,19 @@ export default function ConversationView({
       console.error('Error marking as read:', error)
       // Could revert the optimistic update here if needed
     }
-  }
+  }, [conversation.id, markConversationAsRead])
+
+  // Mark conversation as read when opened
+  useEffect(() => {
+    markAsRead()
+  }, [conversation.id, markAsRead])
+
+  // Mark as read when new messages arrive while viewing this conversation
+  useEffect(() => {
+    if (messages.length > 0 && !loading) {
+      markAsRead()
+    }
+  }, [messages.length, loading, markAsRead])
 
   const handleSendMessage = async (content: string, fileUrl?: string) => {
   try {
@@ -87,12 +87,17 @@ export default function ConversationView({
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       ) : (
-        <MessageList messages={messages} currentUserId={currentUserId} />
+        <MessageList
+          messages={messages}
+          currentUserId={currentUserId}
+          conversationId={conversation.id}
+        />
       )}
 
       {/* Input */}
       <MessageInput
         conversationId={conversation.id}
+        currentUserId={currentUserId}
         onSendMessage={handleSendMessage}
       />
     </div>

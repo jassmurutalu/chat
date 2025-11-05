@@ -3,13 +3,16 @@
 import { useState, KeyboardEvent, useRef } from 'react'
 import { Send, Paperclip, X, Loader2 } from 'lucide-react'
 import { uploadFile, formatFileSize } from '@/lib/storage/upload'
+import { useTypingIndicator } from '@/lib/hooks/useTypingIndicator'
 
 type Props = {
   conversationId: string
+  currentUserId: string
   onSendMessage: (content: string, fileUrl?: string) => Promise<void>
 }
 
-export default function MessageInput({ conversationId, onSendMessage }: Props) {
+export default function MessageInput({ conversationId, currentUserId, onSendMessage }: Props) {
+  const { sendTyping } = useTypingIndicator(conversationId, currentUserId)
   const [message, setMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
@@ -130,7 +133,13 @@ export default function MessageInput({ conversationId, onSendMessage }: Props) {
           
           <textarea
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) => {
+              setMessage(e.target.value)
+              if (e.target.value) {
+                sendTyping() // Send typing indicator
+              }
+            }}
+            
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             rows={1}

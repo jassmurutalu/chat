@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Conversation } from '@/lib/types/database'
 
@@ -8,6 +8,22 @@ export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+
+  const loadConversations = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .order('last_message_at', { ascending: false, nullsFirst: false })
+
+      if (error) throw error
+      setConversations(data || [])
+    } catch (error) {
+      console.error('Error loading conversations:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [supabase])
 
   useEffect(() => {
     loadConversations()
@@ -54,31 +70,15 @@ export function useConversations() {
       console.log('Unsubscribing from conversations channel')
       channel.unsubscribe()
     }
-  }, [])
+  }, [supabase, loadConversations])
 
-  async function loadConversations() {
-    try {
-      const { data, error } = await supabase
-        .from('conversations')
-        .select('*')
-        .order('last_message_at', { ascending: false, nullsFirst: false })
-
-      if (error) throw error
-      setConversations(data || [])
-    } catch (error) {
-      console.error('Error loading conversations:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  function markConversationAsRead(conversationId: string) {
+  const markConversationAsRead = useCallback((conversationId: string) => {
     setConversations((prev) =>
       prev.map((conv) =>
         conv.id === conversationId ? { ...conv, unread_count: 0 } : conv
       )
     )
-  }
+  }, [])
 
   return { conversations, loading, markConversationAsRead }
 }

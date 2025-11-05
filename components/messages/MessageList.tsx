@@ -3,16 +3,18 @@
 import { useEffect, useRef } from 'react'
 import MessageItem from './MessageItem'
 import type { Message } from '@/lib/types/database'
+import TypingIndicator from './TypingIndicator'
 
 type Props = {
   messages: Message[]
   currentUserId: string
+  conversationId: string
 }
 
-export default function MessageList({ messages, currentUserId }: Props) {
+export default function MessageList({ messages, currentUserId, conversationId }: Props) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const scrollToBottom = () => {
+  const scrollToBottom = () => {    
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
@@ -35,6 +37,7 @@ export default function MessageList({ messages, currentUserId }: Props) {
               isOwn={message.sender_type === 'agent'}
             />
           ))}
+          <TypingIndicator conversationId={conversationId} currentUserId={currentUserId} />
           <div ref={messagesEndRef} />
         </div>
       )}
