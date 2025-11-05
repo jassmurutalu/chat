@@ -27,6 +27,13 @@ export default function ConversationView({
     markAsRead()
   }, [conversation.id])
 
+  // Mark as read when new messages arrive while viewing this conversation
+  useEffect(() => {
+    if (messages.length > 0 && !loading) {
+      markAsRead()
+    }
+  }, [messages.length])
+
   async function markAsRead() {
     // Optimistically update the UI immediately
     markConversationAsRead(conversation.id)
