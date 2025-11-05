@@ -31,7 +31,24 @@ export async function POST(request: Request) {
       )
     }
 
-    // Save message to database first
+    // Send to platform first - fail fast if delivery fails
+    if (conversation.platform === 'telegram') {
+      const botToken = process.env.TELEGRAM_BOT_TOKEN!
+      const chatId = parseInt(conversation.customer_id)
+
+      try {
+        await sendTelegramMessage(chatId, content, botToken)
+      } catch (error) {
+        console.error('Error sending to Telegram:', error)
+        return Response.json(
+          { error: `Failed to send message to Telegram: ${String(error)}` },
+          { status: 500 }
+        )
+      }
+    }
+    // Add other platforms here later (messenger, whatsapp)
+
+    // Only save message to database after successful platform delivery
     const { data: message, error: messageError } = await supabase
       .from('messages')
       .insert({
@@ -48,15 +65,6 @@ export async function POST(request: Request) {
       console.error('Error saving message:', messageError)
       throw messageError
     }
-
-    // Send to platform
-    if (conversation.platform === 'telegram') {
-      const botToken = process.env.TELEGRAM_BOT_TOKEN!
-      const chatId = parseInt(conversation.customer_id)
-      
-      await sendTelegramMessage(chatId, content, botToken)
-    }
-    // Add other platforms here later (messenger, whatsapp)
 
     // Update conversation last message
     await supabase
