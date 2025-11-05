@@ -4,7 +4,7 @@ export async function sendMessengerMessage(
   pageAccessToken: string
 ) {
   const response = await fetch(
-    'https://graph.facebook.com/v18.0/me/messages',
+    `https://graph.facebook.com/v18.0/me/messages?access_token=${pageAccessToken}`,
     {
       method: 'POST',
       headers: {
@@ -13,7 +13,6 @@ export async function sendMessengerMessage(
       body: JSON.stringify({
         recipient: { id: recipientId },
         message: { text },
-        access_token: pageAccessToken,
       }),
     }
   )

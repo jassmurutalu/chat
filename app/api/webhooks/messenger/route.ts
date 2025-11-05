@@ -109,9 +109,20 @@ async function handleMessage(event: any) {
 }
 
 async function fetchMessengerProfile(userId: string) {
-  const token = process.env.MESSENGER_PAGE_ACCESS_TOKEN!
-  const response = await fetch(
-    `https://graph.facebook.com/${userId}?fields=first_name,last_name,profile_pic&access_token=${token}`
-  )
-  return response.json()
+  try {
+    const token = process.env.MESSENGER_PAGE_ACCESS_TOKEN!
+    const response = await fetch(
+      `https://graph.facebook.com/${userId}?fields=first_name,last_name,profile_pic&access_token=${token}`
+    )
+
+    if (!response.ok) {
+      console.error('Failed to fetch Messenger profile:', await response.text())
+      return { first_name: 'Unknown', last_name: 'User' }
+    }
+
+    return response.json()
+  } catch (error) {
+    console.error('Error fetching Messenger profile:', error)
+    return { first_name: 'Unknown', last_name: 'User' }
+  }
 }
