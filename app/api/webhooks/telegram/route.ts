@@ -37,11 +37,32 @@ export async function POST(request: Request) {
 
     if (convError || !conversation) {
       // Auto-assign to first available user
-      const { data: user } = await supabase
-        .from('users')
-        .select('id')
-        .limit(1)
-        .single()
+      let assignedUserId: string | null = null
+
+      // Try environment variable first
+      if (process.env.DEFAULT_ASSIGNED_USER_ID) {
+        assignedUserId = process.env.DEFAULT_ASSIGNED_USER_ID
+        console.log('Using DEFAULT_ASSIGNED_USER_ID from env:', assignedUserId)
+      } else {
+        // Try to get first user from auth.users using admin API
+        try {
+          const { data: authData, error: authError } = await supabase.auth.admin.listUsers({
+            page: 1,
+            perPage: 1
+          })
+
+          if (authError) {
+            console.error('Error fetching auth users:', authError)
+          } else if (authData?.users && authData.users.length > 0) {
+            assignedUserId = authData.users[0].id
+            console.log('Auto-assigning to first auth user:', assignedUserId)
+          } else {
+            console.warn('No users found in auth.users for auto-assignment')
+          }
+        } catch (error) {
+          console.error('Failed to fetch users for auto-assignment:', error)
+        }
+      }
 
       // Create new conversation
       const { data: newConversation, error: createError } = await supabase
@@ -54,7 +75,7 @@ export async function POST(request: Request) {
           last_message_at: new Date(message.date * 1000).toISOString(),
           unread_count: 1,
           status: 'active',
-          assigned_to: user?.id, // Auto-assign to first user if available
+          assigned_to: assignedUserId,
         })
         .select()
         .single()
@@ -65,6 +86,12 @@ export async function POST(request: Request) {
       }
 
       conversation = newConversation
+
+      if (assignedUserId) {
+        console.log('New conversation created and assigned to user:', assignedUserId)
+      } else {
+        console.log('New conversation created without assignment (no users available)')
+      }
     } else {
       // Update existing conversation
       await supabase
