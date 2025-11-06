@@ -128,6 +128,9 @@ async function handleMessage(event: any) {
     }
   }
 
+  // Prepare message content
+  const messageContent = messageText || (messageType === 'image' ? '[Image]' : messageType === 'file' ? '[File]' : '[Attachment]')
+
   // Find or create conversation
   let { data: conversation } = await supabase
     .from('conversations')
@@ -151,7 +154,7 @@ async function handleMessage(event: any) {
         customer_name: customerName,
         customer_avatar: customerAvatar,
         customer_id: senderId,
-        last_message: messageText || '[Attachment]',
+        last_message: messageContent,
         last_message_at: new Date().toISOString(),
         unread_count: 1,
         assigned_to: user?.id,
@@ -168,7 +171,7 @@ async function handleMessage(event: any) {
       .update({
         customer_name: customerName,
         customer_avatar: customerAvatar,
-        last_message: messageText || '[Attachment]',
+        last_message: messageContent,
         last_message_at: new Date().toISOString(),
         unread_count: conversation.unread_count + 1,
       })
@@ -176,12 +179,13 @@ async function handleMessage(event: any) {
   }
 
   // Save message
+
   await supabase
     .from('messages')
     .insert({
       conversation_id: conversation.id,
       sender_type: 'customer',
-      content: messageText,
+      content: messageContent,
       message_type: messageType,
       file_url: fileUrl,
       platform_message_id: messageId,
