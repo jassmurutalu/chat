@@ -22,32 +22,24 @@ export default function ConversationView({
   const { sendMessage } = useSendMessage()
   const { markConversationAsRead } = useConversationsContext()
 
-  const markAsRead = useCallback(async () => {
+  // Mark conversation as read when user opens or switches to this conversation
+  useEffect(() => {
     // Optimistically update the UI immediately
     markConversationAsRead(conversation.id)
 
     // Then update the database
-    try {
-      await fetch(`/api/conversations/${conversation.id}/mark-read`, {
-        method: 'POST',
-      })
-    } catch (error) {
-      console.error('Error marking as read:', error)
-      // Could revert the optimistic update here if needed
+    const markAsRead = async () => {
+      try {
+        await fetch(`/api/conversations/${conversation.id}/mark-read`, {
+          method: 'POST',
+        })
+      } catch (error) {
+        console.error('Error marking conversation as read:', error)
+      }
     }
-  }, [conversation.id, markConversationAsRead])
 
-  // Mark conversation as read when opened
-  useEffect(() => {
     markAsRead()
-  }, [conversation.id, markAsRead])
-
-  // Mark as read when new messages arrive while viewing this conversation
-  useEffect(() => {
-    if (messages.length > 0 && !loading) {
-      markAsRead()
-    }
-  }, [messages.length, loading, markAsRead])
+  }, [conversation.id, markConversationAsRead])
 
   const handleSendMessage = async (content: string, fileUrl?: string) => {
   try {
