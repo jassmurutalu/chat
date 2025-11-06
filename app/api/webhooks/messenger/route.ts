@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     if (body.object === 'page') {
       for (const entry of body.entry) {
         for (const event of entry.messaging) {
-          if (event.message && event.message.text) {
+          if (event.message) {
             await handleMessage(event)
           }
         }
@@ -46,12 +46,77 @@ export async function POST(request: Request) {
 
 async function handleMessage(event: any) {
   const senderId = event.sender.id
-  const messageText = event.message.text
+  const messageText = event.message.text || ''
   const messageId = event.message.mid
 
   // Get sender info from Facebook
   const senderInfo = await fetchMessengerProfile(senderId)
   const customerName = `${senderInfo.first_name} ${senderInfo.last_name}`
+  const customerAvatar = senderInfo.profile_pic || null
+
+  // Handle attachments
+  let messageType: 'text' | 'image' | 'file' = 'text'
+  let fileUrl: string | null = null
+
+  if (event.message.attachments && event.message.attachments.length > 0) {
+    const attachment = event.message.attachments[0]
+
+    try {
+      if (attachment.type === 'image' || attachment.type === 'video') {
+        messageType = 'image'
+      } else if (attachment.type === 'file' || attachment.type === 'audio') {
+        messageType = 'file'
+      }
+
+      // Download file from Facebook
+      const attachmentUrl = attachment.payload.url
+      const fileResponse = await fetch(attachmentUrl)
+
+      if (!fileResponse.ok) {
+        throw new Error('Failed to download attachment from Facebook')
+      }
+
+      const fileBuffer = await fileResponse.arrayBuffer()
+
+      // Determine file extension
+      let fileExt = 'file'
+      const contentType = fileResponse.headers.get('content-type') || ''
+
+      if (contentType.includes('image/jpeg') || contentType.includes('image/jpg')) {
+        fileExt = 'jpg'
+      } else if (contentType.includes('image/png')) {
+        fileExt = 'png'
+      } else if (contentType.includes('image/gif')) {
+        fileExt = 'gif'
+      } else if (contentType.includes('video/mp4')) {
+        fileExt = 'mp4'
+      } else if (contentType.includes('application/pdf')) {
+        fileExt = 'pdf'
+      }
+
+      // Upload to Supabase storage
+      const fileName = `messenger/${senderId}/${Date.now()}.${fileExt}`
+      const { error: uploadError } = await supabase.storage
+        .from('chat-attachments')
+        .upload(fileName, fileBuffer, {
+          contentType: contentType || 'application/octet-stream',
+          cacheControl: '3600',
+        })
+
+      if (uploadError) {
+        console.error('Error uploading attachment:', uploadError)
+      } else {
+        const { data: { publicUrl } } = supabase.storage
+          .from('chat-attachments')
+          .getPublicUrl(fileName)
+        fileUrl = publicUrl
+        console.log('Attachment uploaded successfully:', fileUrl)
+      }
+    } catch (error) {
+      console.error('Error processing attachment:', error)
+      // Continue without the file
+    }
+  }
 
   // Find or create conversation
   let { data: conversation } = await supabase
@@ -74,8 +139,9 @@ async function handleMessage(event: any) {
       .insert({
         platform: 'messenger',
         customer_name: customerName,
+        customer_avatar: customerAvatar,
         customer_id: senderId,
-        last_message: messageText,
+        last_message: messageText || '[Attachment]',
         last_message_at: new Date().toISOString(),
         unread_count: 1,
         assigned_to: user?.id,
@@ -86,10 +152,13 @@ async function handleMessage(event: any) {
 
     conversation = newConv
   } else {
+    // Update existing conversation with name, avatar, and message
     await supabase
       .from('conversations')
       .update({
-        last_message: messageText,
+        customer_name: customerName,
+        customer_avatar: customerAvatar,
+        last_message: messageText || '[Attachment]',
         last_message_at: new Date().toISOString(),
         unread_count: conversation.unread_count + 1,
       })
@@ -103,7 +172,8 @@ async function handleMessage(event: any) {
       conversation_id: conversation.id,
       sender_type: 'customer',
       content: messageText,
-      message_type: 'text',
+      message_type: messageType,
+      file_url: fileUrl,
       platform_message_id: messageId,
     })
 }
