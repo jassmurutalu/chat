@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(false)
@@ -49,6 +50,13 @@ export default function AdminPage() {
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Dashboard
+      </Link>
       <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
 
       <div className="space-y-6">
