@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Conversation } from '@/lib/types/database'
 
@@ -8,6 +8,7 @@ export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+  const isRealtimeConnected = useRef(false)
 
   const loadConversations = useCallback(async () => {
     try {
@@ -43,7 +44,13 @@ export function useConversations() {
 
           if (payload.eventType === 'INSERT') {
             console.log('Adding new conversation:', payload.new)
-            setConversations((prev) => [payload.new as Conversation, ...prev])
+            setConversations((prev) => {
+              // Avoid duplicates
+              if (prev.some(conv => conv.id === payload.new.id)) {
+                return prev
+              }
+              return [payload.new as Conversation, ...prev]
+            })
           } else if (payload.eventType === 'UPDATE') {
             console.log('Updating conversation:', payload.new)
             setConversations((prev) =>
@@ -60,15 +67,38 @@ export function useConversations() {
         }
       )
       .subscribe((status, err) => {
-        console.log('Conversations subscription status:', status)
+        console.log('Conversations realtime subscription status:', status)
+
         if (err) {
-          console.error('Subscription error:', err)
+          console.error('✗ Conversations subscription error:', err)
+          isRealtimeConnected.current = false
+        } else if (status === 'SUBSCRIBED') {
+          console.log('✓ Successfully subscribed to realtime conversations')
+          isRealtimeConnected.current = true
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('✗ Failed to subscribe to realtime conversations')
+          isRealtimeConnected.current = false
+        } else if (status === 'TIMED_OUT') {
+          console.error('✗ Conversations subscription timed out')
+          isRealtimeConnected.current = false
+        } else if (status === 'CLOSED') {
+          console.log('Conversations subscription closed')
+          isRealtimeConnected.current = false
         }
       })
+
+    // Polling fallback - check for conversation updates every 5 seconds
+    const pollInterval = setInterval(() => {
+      if (!isRealtimeConnected.current) {
+        console.log('Polling for conversation updates (realtime not connected)')
+      }
+      loadConversations()
+    }, 5000)
 
     return () => {
       console.log('Unsubscribing from conversations channel')
       channel.unsubscribe()
+      clearInterval(pollInterval)
     }
   }, [supabase, loadConversations])
 
@@ -80,5 +110,5 @@ export function useConversations() {
     )
   }, [])
 
-  return { conversations, loading, markConversationAsRead }
+  return { conversations, loading, markConversationAsRead, refresh: loadConversations }
 }
