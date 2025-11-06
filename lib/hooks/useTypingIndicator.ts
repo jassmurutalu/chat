@@ -29,6 +29,8 @@ export function useTypingIndicator(conversationId: string, userId: string) {
           user_id: userId,
           is_typing: true,
           updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'conversation_id,user_id'
         })
 
       // Send typing indicator to Messenger (non-blocking)
