@@ -9,9 +9,22 @@ export default function ConversationList() {
   const [searchQuery, setSearchQuery] = useState('')
   const { conversations, loading } = useConversationsContext()
 
-  const filteredConversations = conversations.filter(conv =>
-    conv.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredConversations = conversations.filter(conv => {
+    const searchLower = searchQuery.toLowerCase()
+  return (
+    conv.customer_name.toLowerCase().includes(searchLower) ||
+    conv.last_message?.toLowerCase().includes(searchLower) ||
+    conv.platform.toLowerCase().includes(searchLower)
   )
+})
+
+const [platformFilter, setPlatformFilter] = useState<'all' | 'telegram' | 'messenger' | 'whatsapp'>('all')
+
+const filteredByPlatform = platformFilter === 'all' 
+  ? filteredConversations
+  : filteredConversations.filter(conv => conv.platform === platformFilter)
+
+
 
   return (
     <div className="w-80 border-r border-gray-200 flex flex-col h-full bg-white">
@@ -29,13 +42,30 @@ export default function ConversationList() {
         </div>
       </div>
 
+      {/* Add platform filter UI */}
+      <div className="flex gap-1 p-2 border-b border-gray-200 overflow-x-auto">
+        {['all', 'telegram', 'messenger', 'whatsapp'].map(platform => (
+          <button
+            key={platform}
+            onClick={() => setPlatformFilter(platform as any)}
+            className={`px-3 py-1 text-xs rounded-full whitespace-nowrap ${
+              platformFilter === platform
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {platform === 'all' ? 'All' : platform.charAt(0).toUpperCase() + platform.slice(1)}
+          </button>
+        ))}
+      </div>
+
       {/* Conversations list */}
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
           </div>
-        ) : filteredConversations.length === 0 ? (
+        ) : filteredByPlatform.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4">
             <MessageSquare className="h-12 w-12 mb-2" />
             <p className="text-center">
@@ -45,7 +75,7 @@ export default function ConversationList() {
             </p>
           </div>
         ) : (
-          filteredConversations.map((conversation) => (
+          filteredByPlatform.map((conversation) => (
             <ConversationItem
               key={conversation.id}
               conversation={conversation}
