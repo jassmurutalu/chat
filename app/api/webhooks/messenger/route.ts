@@ -189,8 +189,16 @@ async function handleMessage(event: any) {
   }
 
   // Save message
+  console.log('Saving message to database:', {
+    conversation_id: conversation.id,
+    sender_type: 'customer',
+    content: messageContent,
+    message_type: messageType,
+    file_url: fileUrl,
+    platform_message_id: messageId,
+  })
 
-  await supabase
+  const { error: messageError } = await supabase
     .from('messages')
     .insert({
       conversation_id: conversation.id,
@@ -200,6 +208,14 @@ async function handleMessage(event: any) {
       file_url: fileUrl,
       platform_message_id: messageId,
     })
+
+  if (messageError) {
+    console.error('Error saving message to database:', messageError)
+    console.error('Message error details:', JSON.stringify(messageError, null, 2))
+    throw messageError
+  }
+
+  console.log('Message saved successfully to database')
 }
 
 async function handleTyping(event: any) {
