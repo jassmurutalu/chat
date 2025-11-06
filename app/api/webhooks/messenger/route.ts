@@ -25,19 +25,10 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    console.log('Messenger webhook:', JSON.stringify(body, null, 2))
 
     if (body.object === 'page') {
       for (const entry of body.entry) {
         for (const event of entry.messaging) {
-          console.log('Messenger event type:', {
-            hasMessage: !!event.message,
-            hasTyping: !!event.typing,
-            hasRead: !!event.read,
-            hasDelivery: !!event.delivery,
-            event
-          })
-
           if (event.message) {
             await handleMessage(event)
           } else if (event.typing) {
@@ -83,7 +74,7 @@ async function handleMessage(event: any) {
       const fileResponse = await fetch(attachmentUrl)
 
       if (!fileResponse.ok) {
-        throw new Error('Failed to download attachment from Facebook')
+        throw new Error(`Failed to download attachment from Facebook: ${fileResponse.status}`)
       }
 
       const fileBuffer = await fileResponse.arrayBuffer()
@@ -120,13 +111,15 @@ async function handleMessage(event: any) {
           .from('chat-attachments')
           .getPublicUrl(fileName)
         fileUrl = publicUrl
-        console.log('Attachment uploaded successfully:', fileUrl)
       }
     } catch (error) {
       console.error('Error processing attachment:', error)
       // Continue without the file
     }
   }
+
+  // Prepare message content
+  const messageContent = messageText || (messageType === 'image' ? '[Image]' : messageType === 'file' ? '[File]' : '[Attachment]')
 
   // Find or create conversation
   let { data: conversation } = await supabase
@@ -151,7 +144,7 @@ async function handleMessage(event: any) {
         customer_name: customerName,
         customer_avatar: customerAvatar,
         customer_id: senderId,
-        last_message: messageText || '[Attachment]',
+        last_message: messageContent,
         last_message_at: new Date().toISOString(),
         unread_count: 1,
         assigned_to: user?.id,
@@ -168,7 +161,7 @@ async function handleMessage(event: any) {
       .update({
         customer_name: customerName,
         customer_avatar: customerAvatar,
-        last_message: messageText || '[Attachment]',
+        last_message: messageContent,
         last_message_at: new Date().toISOString(),
         unread_count: conversation.unread_count + 1,
       })
@@ -176,24 +169,27 @@ async function handleMessage(event: any) {
   }
 
   // Save message
-  await supabase
+  const { error: messageError } = await supabase
     .from('messages')
     .insert({
       conversation_id: conversation.id,
       sender_type: 'customer',
-      content: messageText,
+      content: messageContent,
       message_type: messageType,
       file_url: fileUrl,
       platform_message_id: messageId,
     })
+
+  if (messageError) {
+    console.error('Error saving message:', messageError)
+    throw messageError
+  }
 }
 
 async function handleTyping(event: any) {
   const senderId = event.sender.id
   // If event.typing exists, user is typing (typing_on)
   const isTyping = !!event.typing
-
-  console.log('Typing event received:', { senderId, isTyping, event })
 
   // Find conversation
   const { data: conversation } = await supabase
@@ -204,11 +200,8 @@ async function handleTyping(event: any) {
     .single()
 
   if (!conversation) {
-    console.log('No conversation found for typing event')
     return
   }
-
-  console.log('Updating typing indicator for conversation:', conversation.id)
 
   // Update typing indicator with customer ID as the user
   const { error } = await supabase
@@ -224,8 +217,6 @@ async function handleTyping(event: any) {
 
   if (error) {
     console.error('Error updating typing indicator:', error)
-  } else {
-    console.log('Typing indicator updated successfully')
   }
 }
 
