@@ -12,7 +12,7 @@ type Props = {
 }
 
 export default function MessageInput({ conversationId, currentUserId, onSendMessage }: Props) {
-  const { sendTyping } = useTypingIndicator(conversationId, currentUserId)
+  const { sendTyping, clearTyping } = useTypingIndicator(conversationId, currentUserId)
   const [message, setMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
@@ -67,7 +67,10 @@ export default function MessageInput({ conversationId, currentUserId, onSendMess
         message.trim() || `Sent ${selectedFile?.name}`,
         fileUrl
       )
-      
+
+      // Clear typing indicator immediately
+      clearTyping()
+
       setMessage('')
       removeFile()
     } catch (error) {

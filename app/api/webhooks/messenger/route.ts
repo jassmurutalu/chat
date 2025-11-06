@@ -30,8 +30,18 @@ export async function POST(request: Request) {
     if (body.object === 'page') {
       for (const entry of body.entry) {
         for (const event of entry.messaging) {
+          console.log('Messenger event type:', {
+            hasMessage: !!event.message,
+            hasTyping: !!event.typing,
+            hasRead: !!event.read,
+            hasDelivery: !!event.delivery,
+            event
+          })
+
           if (event.message) {
             await handleMessage(event)
+          } else if (event.typing) {
+            await handleTyping(event)
           }
         }
       }
@@ -176,6 +186,47 @@ async function handleMessage(event: any) {
       file_url: fileUrl,
       platform_message_id: messageId,
     })
+}
+
+async function handleTyping(event: any) {
+  const senderId = event.sender.id
+  // If event.typing exists, user is typing (typing_on)
+  const isTyping = !!event.typing
+
+  console.log('Typing event received:', { senderId, isTyping, event })
+
+  // Find conversation
+  const { data: conversation } = await supabase
+    .from('conversations')
+    .select('id')
+    .eq('customer_id', senderId)
+    .eq('platform', 'messenger')
+    .single()
+
+  if (!conversation) {
+    console.log('No conversation found for typing event')
+    return
+  }
+
+  console.log('Updating typing indicator for conversation:', conversation.id)
+
+  // Update typing indicator with customer ID as the user
+  const { error } = await supabase
+    .from('typing_indicators')
+    .upsert({
+      conversation_id: conversation.id,
+      user_id: `customer_${senderId}`,
+      is_typing: isTyping,
+      updated_at: new Date().toISOString(),
+    }, {
+      onConflict: 'conversation_id,user_id'
+    })
+
+  if (error) {
+    console.error('Error updating typing indicator:', error)
+  } else {
+    console.log('Typing indicator updated successfully')
+  }
 }
 
 async function fetchMessengerProfile(userId: string) {
