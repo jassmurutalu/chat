@@ -32,6 +32,8 @@ export async function POST(request: Request) {
         for (const event of entry.messaging) {
           if (event.message) {
             await handleMessage(event)
+          } else if (event.typing) {
+            await handleTyping(event)
           }
         }
       }
@@ -175,6 +177,34 @@ async function handleMessage(event: any) {
       message_type: messageType,
       file_url: fileUrl,
       platform_message_id: messageId,
+    })
+}
+
+async function handleTyping(event: any) {
+  const senderId = event.sender.id
+  const isTyping = event.typing?.on || false
+
+  // Find conversation
+  const { data: conversation } = await supabase
+    .from('conversations')
+    .select('id')
+    .eq('customer_id', senderId)
+    .eq('platform', 'messenger')
+    .single()
+
+  if (!conversation) {
+    console.log('No conversation found for typing event')
+    return
+  }
+
+  // Update typing indicator with customer ID as the user
+  await supabase
+    .from('typing_indicators')
+    .upsert({
+      conversation_id: conversation.id,
+      user_id: `customer_${senderId}`,
+      is_typing: isTyping,
+      updated_at: new Date().toISOString(),
     })
 }
 

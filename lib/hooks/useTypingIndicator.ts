@@ -21,6 +21,7 @@ export function useTypingIndicator(conversationId: string, userId: string) {
         clearTimeout(typingTimeout)
       }
 
+      // Update local typing indicator
       await supabase
         .from('typing_indicators')
         .upsert({
@@ -30,6 +31,17 @@ export function useTypingIndicator(conversationId: string, userId: string) {
           updated_at: new Date().toISOString(),
         })
 
+      // Send typing indicator to Messenger (non-blocking)
+      fetch('/api/typing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          userId,
+          action: 'start',
+        }),
+      }).catch((err) => console.error('Failed to send typing to platform:', err))
+
       // Auto-clear after 3 seconds
       const timeoutId = setTimeout(async () => {
         await supabase
@@ -37,12 +49,54 @@ export function useTypingIndicator(conversationId: string, userId: string) {
           .update({ is_typing: false })
           .eq('conversation_id', conversationId)
           .eq('user_id', userId)
+
+        // Send typing_off to Messenger
+        fetch('/api/typing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId,
+            userId,
+            action: 'stop',
+          }),
+        }).catch((err) => console.error('Failed to stop typing on platform:', err))
+
         setTypingTimeout(null)
       }, 3000)
 
       setTypingTimeout(timeoutId)
     } catch (error) {
       console.error('Error sending typing indicator:', error)
+    }
+  }, [conversationId, userId, supabase, typingTimeout])
+
+  const clearTyping = useCallback(async () => {
+    try {
+      // Clear timeout
+      if (typingTimeout) {
+        clearTimeout(typingTimeout)
+        setTypingTimeout(null)
+      }
+
+      // Clear local typing indicator
+      await supabase
+        .from('typing_indicators')
+        .update({ is_typing: false })
+        .eq('conversation_id', conversationId)
+        .eq('user_id', userId)
+
+      // Send typing_off to Messenger
+      fetch('/api/typing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          userId,
+          action: 'stop',
+        }),
+      }).catch((err) => console.error('Failed to stop typing on platform:', err))
+    } catch (error) {
+      console.error('Error clearing typing indicator:', error)
     }
   }, [conversationId, userId, supabase, typingTimeout])
 
@@ -55,7 +109,7 @@ export function useTypingIndicator(conversationId: string, userId: string) {
     }
   }, [typingTimeout])
 
-  return { sendTyping }
+  return { sendTyping, clearTyping }
 }
 
 export function useWatchTyping(conversationId: string, currentUserId: string) {
