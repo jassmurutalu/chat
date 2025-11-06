@@ -70,6 +70,7 @@ async function handleMessage(event: any) {
 
   if (event.message.attachments && event.message.attachments.length > 0) {
     const attachment = event.message.attachments[0]
+    console.log('Processing attachment:', JSON.stringify(attachment, null, 2))
 
     try {
       if (attachment.type === 'image' || attachment.type === 'video') {
@@ -77,20 +78,25 @@ async function handleMessage(event: any) {
       } else if (attachment.type === 'file' || attachment.type === 'audio') {
         messageType = 'file'
       }
+      console.log('Attachment type:', attachment.type, '-> messageType:', messageType)
 
       // Download file from Facebook
       const attachmentUrl = attachment.payload.url
+      console.log('Downloading attachment from:', attachmentUrl)
       const fileResponse = await fetch(attachmentUrl)
 
       if (!fileResponse.ok) {
-        throw new Error('Failed to download attachment from Facebook')
+        console.error('Failed to download attachment. Status:', fileResponse.status, fileResponse.statusText)
+        throw new Error(`Failed to download attachment from Facebook: ${fileResponse.status} ${fileResponse.statusText}`)
       }
 
       const fileBuffer = await fileResponse.arrayBuffer()
+      console.log('Downloaded file size:', fileBuffer.byteLength, 'bytes')
 
       // Determine file extension
       let fileExt = 'file'
       const contentType = fileResponse.headers.get('content-type') || ''
+      console.log('File content-type:', contentType)
 
       if (contentType.includes('image/jpeg') || contentType.includes('image/jpg')) {
         fileExt = 'jpg'
@@ -103,9 +109,11 @@ async function handleMessage(event: any) {
       } else if (contentType.includes('application/pdf')) {
         fileExt = 'pdf'
       }
+      console.log('File extension determined:', fileExt)
 
       // Upload to Supabase storage
       const fileName = `messenger/${senderId}/${Date.now()}.${fileExt}`
+      console.log('Uploading to Supabase as:', fileName)
       const { error: uploadError } = await supabase.storage
         .from('chat-attachments')
         .upload(fileName, fileBuffer, {
@@ -114,7 +122,8 @@ async function handleMessage(event: any) {
         })
 
       if (uploadError) {
-        console.error('Error uploading attachment:', uploadError)
+        console.error('Error uploading attachment to Supabase:', uploadError)
+        console.error('Upload error details:', JSON.stringify(uploadError, null, 2))
       } else {
         const { data: { publicUrl } } = supabase.storage
           .from('chat-attachments')
@@ -124,6 +133,7 @@ async function handleMessage(event: any) {
       }
     } catch (error) {
       console.error('Error processing attachment:', error)
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
       // Continue without the file
     }
   }
