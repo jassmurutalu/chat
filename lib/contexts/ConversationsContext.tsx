@@ -12,8 +12,14 @@ type ConversationsContextType = {
 
 const ConversationsContext = createContext<ConversationsContextType | undefined>(undefined)
 
-export function ConversationsProvider({ children }: { children: ReactNode }) {
-  const { conversations, loading, markConversationAsRead } = useConversations()
+export function ConversationsProvider({
+  children,
+  userId
+}: {
+  children: ReactNode
+  userId: string
+}) {
+  const { conversations, loading, markConversationAsRead } = useConversations(userId)
 
   return (
     <ConversationsContext.Provider value={{ conversations, loading, markConversationAsRead }}>

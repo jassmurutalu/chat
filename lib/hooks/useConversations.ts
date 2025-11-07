@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Conversation } from '@/lib/types/database'
 import { useNotifications } from './useNotifications'
 
-export function useConversations() {
+export function useConversations(userId: string) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
@@ -16,6 +16,7 @@ export function useConversations() {
       const { data, error } = await supabase
         .from('conversations')
         .select('*')
+        .eq('assigned_to', userId)
         .order('last_message_at', { ascending: false, nullsFirst: false })
 
       if (error) throw error
@@ -25,12 +26,12 @@ export function useConversations() {
     } finally {
       setLoading(false)
     }
-  }, [supabase])
+  }, [supabase, userId])
 
   useEffect(() => {
     loadConversations()
 
-    // Subscribe to real-time changes
+    // Subscribe to real-time changes - filter by assigned_to
     const channel = supabase
       .channel('conversations')
       .on(
@@ -39,6 +40,7 @@ export function useConversations() {
           event: '*',
           schema: 'public',
           table: 'conversations',
+          filter: `assigned_to=eq.${userId}`,
         },
         (payload) => {
           console.log('Conversation change received:', payload)
@@ -46,19 +48,38 @@ export function useConversations() {
           if (payload.eventType === 'INSERT') {
             console.log('Adding new conversation:', payload.new)
             const newConv = payload.new as Conversation
-            setConversations((prev) => [newConv, ...prev])
-            // Send notification
-            sendNotification(
-              'New conversation',
-              `${newConv.customer_name}: ${newConv.last_message}`,
-            )                   
+            // Only add if assigned to current user
+            if (newConv.assigned_to === userId) {
+              setConversations((prev) => [newConv, ...prev])
+              // Send notification
+              sendNotification(
+                'New conversation',
+                `${newConv.customer_name}: ${newConv.last_message}`,
+              )
+            }
           } else if (payload.eventType === 'UPDATE') {
             console.log('Updating conversation:', payload.new)
-            setConversations((prev) =>
-              prev.map((conv) =>
-                conv.id === payload.new.id ? (payload.new as Conversation) : conv
+            const updatedConv = payload.new as Conversation
+
+            if (updatedConv.assigned_to === userId) {
+              // Add or update if assigned to current user
+              setConversations((prev) => {
+                const exists = prev.find((conv) => conv.id === updatedConv.id)
+                if (exists) {
+                  return prev.map((conv) =>
+                    conv.id === updatedConv.id ? updatedConv : conv
+                  )
+                } else {
+                  // Was reassigned to this user
+                  return [updatedConv, ...prev]
+                }
+              })
+            } else {
+              // Was reassigned away from this user - remove it
+              setConversations((prev) =>
+                prev.filter((conv) => conv.id !== updatedConv.id)
               )
-            )
+            }
           } else if (payload.eventType === 'DELETE') {
             console.log('Deleting conversation:', payload.old)
             setConversations((prev) =>
