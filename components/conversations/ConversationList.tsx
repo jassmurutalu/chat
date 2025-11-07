@@ -37,7 +37,7 @@ const filteredByPlatform = platformFilter === 'all'
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-500"
           />
         </div>
       </div>
@@ -68,7 +68,7 @@ const filteredByPlatform = platformFilter === 'all'
         ) : filteredByPlatform.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4">
             <MessageSquare className="h-12 w-12 mb-2" />
-            <p className="text-center">
+            <p className="text-center text-gray-700">
               {conversations.length === 0
                 ? 'No conversations yet'
                 : 'No conversations match your search'}
