@@ -72,7 +72,7 @@ export default function RegisterPage() {
             <h2 className="text-2xl font-bold text-gray-900">
               Account Created Successfully!
             </h2>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-gray-700">
               Redirecting you to sign in...
             </p>
           </div>
@@ -85,10 +85,10 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
         <div>
-          <h2 className="text-center text-3xl font-bold">
+          <h2 className="text-center text-3xl font-bold text-gray-900">
             Customer Chat App
           </h2>
-          <p className="mt-2 text-center text-gray-600">
+          <p className="mt-2 text-center text-gray-700">
             Create your account
           </p>
         </div>
@@ -102,7 +102,7 @@ export default function RegisterPage() {
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium">
+              <label htmlFor="fullName" className="block text-sm font-medium text-gray-900">
                 Full Name
               </label>
               <input
@@ -111,13 +111,13 @@ export default function RegisterPage() {
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md placeholder:text-gray-500"
                 placeholder="John Doe"
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-900">
                 Email
               </label>
               <input
@@ -126,13 +126,13 @@ export default function RegisterPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md placeholder:text-gray-500"
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-900">
                 Password
               </label>
               <input
@@ -142,7 +142,7 @@ export default function RegisterPage() {
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md placeholder:text-gray-500"
                 placeholder="••••••••"
               />
               <p className="mt-1 text-xs text-gray-500">
@@ -160,7 +160,7 @@ export default function RegisterPage() {
           </button>
 
           <div className="text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-700">
               Already have an account?{' '}
               <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
                 Sign in
