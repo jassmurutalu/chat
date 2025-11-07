@@ -35,12 +35,6 @@ export default function DashboardHeader({ userEmail }: Props) {
           >
             Integrations
           </Link>
-          <Link
-            href="/dashboard/admin"
-            className="text-sm text-blue-600 hover:text-blue-700"
-          >
-            Admin
-          </Link>
           <span className="text-sm text-gray-600">{userEmail}</span>
           <form action={handleSignOut}>
             <button className="text-sm text-red-600 hover:text-red-700">

@@ -140,7 +140,14 @@ export async function setTelegramWebhook(botToken: string, webhookUrl: string) {
 export async function getTelegramWebhookInfo(botToken: string) {
   const url = `${TELEGRAM_API}${botToken}/getWebhookInfo`
   const response = await fetch(url)
-  return response.json()
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(`Failed to get webhook info: ${JSON.stringify(data)}`)
+  }
+
+  // Return the result object directly
+  return data.result || data
 }
 
 export async function deleteTelegramWebhook(botToken: string) {
