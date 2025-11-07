@@ -32,33 +32,69 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   async function loadOrganizations() {
     try {
-      // Get user's organizations
-      const { data: memberships } = await supabase
-        .from('organization_members')
-        .select('organization_id, organizations(*)')
-        .order('joined_at', { ascending: true })
-
-      const orgs = memberships?.map((m: any) => m.organizations).filter(Boolean) || []
-      setOrganizations(orgs)
-
-      // Get current organization from user profile
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
+        console.log('No user found')
         setLoading(false)
         return
       }
 
+      console.log('Loading organizations for user:', user.id)
+
+      // Get user's organization memberships
+      const { data: memberships, error: membershipsError } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .order('joined_at', { ascending: true })
+
+      if (membershipsError) {
+        console.error('Error loading memberships:', membershipsError)
+        setLoading(false)
+        return
+      }
+
+      console.log('Memberships:', memberships)
+
+      if (!memberships || memberships.length === 0) {
+        console.log('No memberships found')
+        setLoading(false)
+        return
+      }
+
+      // Get organization details
+      const orgIds = memberships.map(m => m.organization_id)
+      const { data: orgs, error: orgsError } = await supabase
+        .from('organizations')
+        .select('*')
+        .in('id', orgIds)
+
+      if (orgsError) {
+        console.error('Error loading organizations:', orgsError)
+        setLoading(false)
+        return
+      }
+
+      console.log('Organizations loaded:', orgs)
+      setOrganizations(orgs || [])
+
+      // Get current organization from user profile
       const { data: userData } = await supabase
         .from('users')
         .select('current_organization_id')
         .eq('id', user.id)
         .single()
 
+      console.log('User data:', userData)
+
       if (userData?.current_organization_id) {
-        const current = orgs.find((o: Organization) => o.id === userData.current_organization_id)
-        setCurrentOrg(current || orgs[0] || null)
+        const current = orgs?.find((o: Organization) => o.id === userData.current_organization_id)
+        setCurrentOrg(current || orgs?.[0] || null)
+        console.log('Current org set to:', current || orgs?.[0])
       } else {
-        setCurrentOrg(orgs[0] || null)
+        setCurrentOrg(orgs?.[0] || null)
+        console.log('Current org set to first org:', orgs?.[0])
       }
     } catch (error) {
       console.error('Error loading organizations:', error)
