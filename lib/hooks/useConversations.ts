@@ -3,11 +3,13 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Conversation } from '@/lib/types/database'
+import { useNotifications } from './useNotifications'
 
 export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+  const { sendNotification } = useNotifications()
 
   const loadConversations = useCallback(async () => {
     try {
@@ -43,7 +45,13 @@ export function useConversations() {
 
           if (payload.eventType === 'INSERT') {
             console.log('Adding new conversation:', payload.new)
-            setConversations((prev) => [payload.new as Conversation, ...prev])
+            const newConv = payload.new as Conversation
+            setConversations((prev) => [newConv, ...prev])
+            // Send notification
+            sendNotification(
+              'New conversation',
+              `${newConv.customer_name}: ${newConv.last_message}`,
+            )                   
           } else if (payload.eventType === 'UPDATE') {
             console.log('Updating conversation:', payload.new)
             setConversations((prev) =>
