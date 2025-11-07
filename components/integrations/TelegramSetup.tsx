@@ -11,6 +11,7 @@ type Props = {
 export default function TelegramSetup({ onClose, orgId }: Props) {
   const [step, setStep] = useState(1)
   const [botToken, setBotToken] = useState('')
+  const [webhookUrl, setWebhookUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [botInfo, setBotInfo] = useState<any>(null)
@@ -54,7 +55,7 @@ export default function TelegramSetup({ onClose, orgId }: Props) {
       const res = await fetch('/api/integrations/telegram/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ botToken, orgId }),
+        body: JSON.stringify({ botToken, orgId, webhookUrl: webhookUrl || undefined }),
       })
 
       const data = await res.json()
@@ -116,6 +117,22 @@ export default function TelegramSetup({ onClose, orgId }: Props) {
                 </p>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Custom Webhook URL <span className="text-gray-400 font-normal">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={webhookUrl}
+                  onChange={(e) => setWebhookUrl(e.target.value)}
+                  placeholder="https://yourdomain.com (leave empty to use default)"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  If you want to use a custom domain for webhooks, enter it here. Otherwise, the default from environment will be used.
+                </p>
+              </div>
+
               {error && (
                 <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
                   {error}
@@ -154,10 +171,16 @@ export default function TelegramSetup({ onClose, orgId }: Props) {
 
               <div>
                 <h3 className="text-lg font-semibold mb-2">Step 2: Setup Webhook</h3>
-                <p className="text-gray-600">
+                <p className="text-gray-600 mb-3">
                   We'll configure your bot to send messages to your workspace.
                   This happens automatically.
                 </p>
+                {webhookUrl && (
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm font-medium text-blue-900 mb-1">Custom webhook URL will be used:</p>
+                    <code className="text-xs text-blue-700 break-all">{webhookUrl}/api/webhooks/telegram/{orgId}</code>
+                  </div>
+                )}
               </div>
 
               {error && (
