@@ -22,6 +22,7 @@ type Integration = {
 
 type WebhookStatus = {
   webhookInfo: any
+  registeredUrl?: string
   lastReceived?: string
 }
 
@@ -75,6 +76,7 @@ export default function IntegrationsPage() {
           ...prev,
           [integrationId]: {
             webhookInfo: data.webhookInfo,
+            registeredUrl: data.registeredUrl,
             lastReceived: data.lastReceived
           }
         }))
@@ -195,8 +197,14 @@ export default function IntegrationsPage() {
                           <h4 className="font-semibold text-sm mb-2">Webhook Status</h4>
                           <div className="space-y-2 text-sm">
                             <div>
-                              <span className="text-gray-600">URL: </span>
-                              <code className="bg-white px-2 py-1 rounded text-xs">
+                              <span className="text-gray-600">Registered URL (in database): </span>
+                              <code className="bg-white px-2 py-1 rounded text-xs block mt-1">
+                                {webhookStatus[integration.id].registeredUrl || 'Not set'}
+                              </code>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Current URL (from Telegram): </span>
+                              <code className="bg-white px-2 py-1 rounded text-xs block mt-1">
                                 {webhookStatus[integration.id].webhookInfo?.url || 'Not set'}
                               </code>
                             </div>

@@ -57,6 +57,7 @@ export async function GET(
     return Response.json({
       success: true,
       webhookInfo,
+      registeredUrl: integration.webhook_url,
       lastReceived: integration.last_webhook_received_at,
     })
   } catch (error) {
