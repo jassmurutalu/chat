@@ -38,10 +38,10 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
         <div>
-          <h2 className="text-center text-3xl font-bold">
+          <h2 className="text-center text-3xl font-bold text-gray-900">
             Customer Chat App
           </h2>
-          <p className="mt-2 text-center text-gray-600">
+          <p className="mt-2 text-center text-gray-700">
             Sign in to your account
           </p>
         </div>
@@ -55,7 +55,7 @@ export default function LoginPage() {
           
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-900">
                 Email
               </label>
               <input
@@ -68,9 +68,9 @@ export default function LoginPage() {
                 placeholder="you@example.com"
               />
             </div>
-            
+
             <div>
-              <label htmlFor="password" className="block text-sm font-medium">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-900">
                 Password
               </label>
               <input
@@ -94,7 +94,7 @@ export default function LoginPage() {
           </button>
 
           <div className="text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-700">
               Don't have an account?{' '}
               <a href="/register" className="font-medium text-blue-600 hover:text-blue-500">
                 Create one
