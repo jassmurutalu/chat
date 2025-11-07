@@ -170,15 +170,26 @@ export async function POST(request: Request) {
 
       conversation = newConversation
     } else {
-      // Update existing conversation
-      await supabase
-        .from('conversations')
-        .update({
-          last_message: messageText,
-          last_message_at: new Date(message.date * 1000).toISOString(),
-          unread_count: conversation.unread_count + 1,
-        })
-        .eq('id', conversation.id)
+      // Update existing conversation - use RPC to increment atomically
+      const { error: updateError } = await supabase.rpc('increment_unread_count', {
+        conversation_id: conversation.id,
+        new_last_message: messageText,
+        new_last_message_at: new Date(message.date * 1000).toISOString(),
+      })
+
+      // Fallback to direct update if RPC doesn't exist yet
+      if (updateError && updateError.message?.includes('function')) {
+        await supabase
+          .from('conversations')
+          .update({
+            last_message: messageText,
+            last_message_at: new Date(message.date * 1000).toISOString(),
+            unread_count: conversation.unread_count + 1,
+          })
+          .eq('id', conversation.id)
+      } else if (updateError) {
+        console.error('Error updating conversation:', updateError)
+      }
     }
 
     // Save message to database
