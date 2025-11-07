@@ -3,9 +3,10 @@ import { getTelegramWebhookInfo } from '@/lib/platforms/telegram'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createServerSupabaseClient()
 
     // Get current user
@@ -18,7 +19,7 @@ export async function GET(
     const { data: integration, error: integrationError } = await supabase
       .from('integrations')
       .select('*, organizations!inner(id)')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (integrationError || !integration) {
