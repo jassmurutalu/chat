@@ -33,6 +33,20 @@ export async function POST(request: Request) {
       )
     }
 
+    // Get integration for this conversation's organization
+    const { data: integration } = await supabase
+      .from('integrations')
+      .select('*')
+      .eq('organization_id', conversation.organization_id)
+      .eq('platform', conversation.platform)
+      .eq('status', 'active')
+      .single()
+
+    if (!integration) {
+      // Fallback to environment variables for backwards compatibility
+      console.warn('Integration not found, falling back to environment variables')
+    }
+
     // Determine message type
     let messageType: 'text' | 'image' | 'file' = 'text'
     if (fileUrl) {
@@ -41,7 +55,7 @@ export async function POST(request: Request) {
 
     // Send to platform first - fail fast if delivery fails
     if (conversation.platform === 'telegram') {
-      const botToken = process.env.TELEGRAM_BOT_TOKEN!
+      const botToken = integration?.telegram_bot_token || process.env.TELEGRAM_BOT_TOKEN!
       const chatId = parseInt(conversation.customer_id)
 
       try {
@@ -62,7 +76,7 @@ export async function POST(request: Request) {
     }
 
     if (conversation.platform === 'messenger') {
-      const pageAccessToken = process.env.MESSENGER_PAGE_ACCESS_TOKEN!
+      const pageAccessToken = integration?.messenger_page_access_token || process.env.MESSENGER_PAGE_ACCESS_TOKEN!
 
       try {
         if (messageType === 'image' && fileUrl) {

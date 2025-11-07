@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { useNotifications } from '@/lib/hooks/useNotifications'
 import { handleSignOut } from '@/app/dashboard/actions'
+import OrganizationSwitcher from '@/components/ui/OrganizationSwitcher'
 
 type Props = {
   userEmail: string
@@ -23,8 +24,17 @@ export default function DashboardHeader({ userEmail }: Props) {
   return (
     <header className="bg-white border-b border-gray-200 px-4 py-3">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Customer Chat</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-semibold">Customer Chat</h1>
+          <OrganizationSwitcher />
+        </div>
         <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/settings/integrations"
+            className="text-sm text-blue-600 hover:text-blue-700"
+          >
+            Integrations
+          </Link>
           <Link
             href="/dashboard/admin"
             className="text-sm text-blue-600 hover:text-blue-700"
