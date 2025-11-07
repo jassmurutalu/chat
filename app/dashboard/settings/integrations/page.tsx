@@ -118,7 +118,7 @@ export default function IntegrationsPage() {
     return (
       <div className="p-8 max-w-6xl mx-auto">
         <div className="text-center py-12">
-          <p className="text-gray-600">Please select an organization first</p>
+          <p className="text-gray-700">Please select an organization first</p>
         </div>
       </div>
     )
@@ -128,15 +128,15 @@ export default function IntegrationsPage() {
     <div className="p-8 max-w-6xl mx-auto">
       <Link
         href="/dashboard"
-        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+        className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 mb-6 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Dashboard
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Integrations</h1>
-        <p className="text-gray-600 mt-2">
+        <h1 className="text-3xl font-bold text-gray-900">Integrations</h1>
+        <p className="text-gray-700 mt-2">
           Connect your messaging platforms to start receiving messages
         </p>
       </div>
@@ -160,7 +160,7 @@ export default function IntegrationsPage() {
                       {platform.icon}
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <h3 className="text-xl font-semibold flex items-center gap-2 text-gray-900">
                         {platform.name}
                         {isConnected && (
                           <CheckCircle className="h-5 w-5 text-green-500" />
@@ -169,7 +169,7 @@ export default function IntegrationsPage() {
                           <XCircle className="h-5 w-5 text-red-500" />
                         )}
                       </h3>
-                      <p className="text-gray-600 mt-1">{platform.description}</p>
+                      <p className="text-gray-700 mt-1">{platform.description}</p>
 
                       {isConnected && (
                         <div className="mt-2 text-sm text-gray-500">

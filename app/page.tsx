@@ -14,7 +14,7 @@ export default function Home() {
           <div className="flex gap-4">
             <Link
               href="/login"
-              className="text-gray-600 hover:text-gray-900 font-medium"
+              className="text-gray-700 hover:text-gray-900 font-medium"
             >
               Sign In
             </Link>
@@ -34,7 +34,7 @@ export default function Home() {
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
             Unified Customer Communication Platform
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-700 mb-8 max-w-3xl mx-auto">
             Manage all your customer conversations from Telegram, Messenger, and WhatsApp in one powerful dashboard.
             Streamline your support and never miss a message.
           </p>
@@ -63,7 +63,7 @@ export default function Home() {
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Multi-Platform Support
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-700">
               Connect Telegram, Messenger, and WhatsApp. Manage all conversations from a single dashboard.
             </p>
           </div>
@@ -75,7 +75,7 @@ export default function Home() {
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Team Collaboration
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-700">
               Assign conversations to team members. Real-time updates and notifications keep everyone in sync.
             </p>
           </div>
@@ -87,7 +87,7 @@ export default function Home() {
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Instant Notifications
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-700">
               Get notified instantly when new messages arrive. Never miss an important customer inquiry.
             </p>
           </div>
@@ -113,7 +113,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-50 border-t border-gray-200 mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <p className="text-center text-gray-600">
+          <p className="text-center text-gray-700">
             © 2025 Customer Chat. All rights reserved.
           </p>
         </div>

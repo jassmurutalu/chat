@@ -25,7 +25,7 @@ export default function DashboardHeader({ userEmail }: Props) {
     <header className="bg-white border-b border-gray-200 px-4 py-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-semibold">Customer Chat</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Customer Chat</h1>
           <OrganizationSwitcher />
         </div>
         <div className="flex items-center gap-3">
@@ -35,7 +35,7 @@ export default function DashboardHeader({ userEmail }: Props) {
           >
             Integrations
           </Link>
-          <span className="text-sm text-gray-600">{userEmail}</span>
+          <span className="text-sm text-gray-700">{userEmail}</span>
           <form action={handleSignOut}>
             <button className="text-sm text-red-600 hover:text-red-700">
               Sign out
