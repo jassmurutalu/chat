@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
-import { MessageSquare, CheckCircle, XCircle, Plus, Settings } from 'lucide-react'
+import { MessageSquare, CheckCircle, XCircle, Plus, Settings, ArrowLeft } from 'lucide-react'
 import TelegramSetup from '@/components/integrations/TelegramSetup'
 import MessengerSetup from '@/components/integrations/MessengerSetup'
 import WhatsAppSetup from '@/components/integrations/WhatsAppSetup'
@@ -91,6 +92,14 @@ export default function IntegrationsPage() {
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Dashboard
+      </Link>
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Integrations</h1>
         <p className="text-gray-600 mt-2">
