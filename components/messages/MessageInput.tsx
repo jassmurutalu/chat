@@ -146,7 +146,7 @@ export default function MessageInput({ conversationId, currentUserId, onSendMess
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             rows={1}
-            className="flex-1 resize-none rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32 placeholder:text-gray-500"
+            className="flex-1 resize-none rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32 text-gray-900 placeholder:text-gray-500"
             disabled={sending || uploading}
           />
           
