@@ -31,7 +31,8 @@ export function useConversations(userId: string) {
   useEffect(() => {
     loadConversations()
 
-    // Subscribe to real-time changes - filter by assigned_to
+    // Subscribe to real-time changes
+    // Note: We don't filter in the subscription because DELETE events with filters can be unreliable
     const channel = supabase
       .channel('conversations')
       .on(
@@ -40,7 +41,6 @@ export function useConversations(userId: string) {
           event: '*',
           schema: 'public',
           table: 'conversations',
-          filter: `assigned_to=eq.${userId}`,
         },
         (payload) => {
           console.log('Conversation change received:', payload)
@@ -81,10 +81,15 @@ export function useConversations(userId: string) {
               )
             }
           } else if (payload.eventType === 'DELETE') {
-            console.log('Deleting conversation:', payload.old)
-            setConversations((prev) =>
-              prev.filter((conv) => conv.id !== payload.old.id)
-            )
+            console.log('🗑️ DELETE event received:', payload)
+            console.log('Deleted conversation ID:', payload.old?.id)
+            // Remove from list - if it's in the list, it was assigned to this user
+            setConversations((prev) => {
+              const filtered = prev.filter((conv) => conv.id !== payload.old?.id)
+              console.log('Conversations before delete:', prev.length)
+              console.log('Conversations after delete:', filtered.length)
+              return filtered
+            })
           }
         }
       )

@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { useMessages } from '@/lib/hooks/useMessages'
 import { useSendMessage } from '@/lib/hooks/useSendMessage'
 import { useConversationsContext } from '@/lib/contexts/ConversationsContext'
 import MessageList from '@/components/messages/MessageList'
 import MessageInput from '@/components/messages/MessageInput'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Trash2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import type { Conversation } from '@/lib/types/database'
 
 type Props = {
@@ -21,6 +22,8 @@ export default function ConversationView({
   const { messages, loading } = useMessages(conversation.id)
   const { sendMessage } = useSendMessage()
   const { markConversationAsRead } = useConversationsContext()
+  const [deleting, setDeleting] = useState(false)
+  const router = useRouter()
 
   const markAsRead = useCallback(async () => {
     // Optimistically update the UI immediately
@@ -50,13 +53,39 @@ export default function ConversationView({
   }, [messages.length, loading, markAsRead])
 
   const handleSendMessage = async (content: string, fileUrl?: string) => {
-  try {
-    await sendMessage(conversation.id, content, currentUserId, fileUrl)
-  } catch (error) {
-    console.error('Failed to send message:', error)
-    alert('Failed to send message. Please try again.')
+    try {
+      await sendMessage(conversation.id, content, currentUserId, fileUrl)
+    } catch (error) {
+      console.error('Failed to send message:', error)
+      alert('Failed to send message. Please try again.')
+    }
   }
-}
+
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to delete this conversation with ${conversation.customer_name}? This action cannot be undone.`)) {
+      return
+    }
+
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/conversations/${conversation.id}/delete`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete conversation')
+      }
+
+      console.log('✅ Conversation deleted successfully')
+      // Redirect to conversations list
+      router.push('/dashboard/conversations')
+      router.refresh() // Force a refresh to ensure the list updates
+    } catch (error) {
+      console.error('Failed to delete conversation:', error)
+      alert('Failed to delete conversation. Please try again.')
+      setDeleting(false)
+    }
+  }
 
   const platformEmojis = {
     telegram: '✈️',
@@ -68,16 +97,30 @@ export default function ConversationView({
     <div className="flex flex-col h-full">
       {/* Conversation header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">{platformEmojis[conversation.platform]}</span>
-          <div>
-            <h2 className="font-semibold text-gray-900">
-              {conversation.customer_name}
-            </h2>
-            <p className="text-sm text-gray-500 capitalize">
-              via {conversation.platform}
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{platformEmojis[conversation.platform]}</span>
+            <div>
+              <h2 className="font-semibold text-gray-900">
+                {conversation.customer_name}
+              </h2>
+              <p className="text-sm text-gray-500 capitalize">
+                via {conversation.platform}
+              </p>
+            </div>
           </div>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+            title="Delete conversation"
+          >
+            {deleting ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Trash2 className="h-5 w-5" />
+            )}
+          </button>
         </div>
       </div>
 
