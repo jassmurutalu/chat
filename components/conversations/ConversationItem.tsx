@@ -39,7 +39,8 @@ export default function ConversationItem({ conversation }: Props) {
               {conversation.customer_name}
             </h3>
           </div>
-          {conversation.unread_count > 0 && (
+          {/* Only show unread badge if not currently viewing this conversation */}
+          {conversation.unread_count > 0 && !isActive && (
             <span className="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">
               {conversation.unread_count}
             </span>
