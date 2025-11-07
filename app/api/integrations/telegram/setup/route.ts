@@ -10,6 +10,14 @@ export async function POST(request: Request) {
   try {
     const { botToken, orgId, webhookUrl: customWebhookUrl } = await request.json()
 
+    // Require custom webhook URL
+    if (!customWebhookUrl) {
+      return Response.json(
+        { error: 'Webhook URL is required. Please provide your webhook base URL.' },
+        { status: 400 }
+      )
+    }
+
     // Get integration
     const { data: integration } = await supabase
       .from('integrations')
@@ -27,17 +35,7 @@ export async function POST(request: Request) {
 
     // Generate unique webhook URL for this org
     const webhookPath = `/api/webhooks/telegram/${orgId}`
-    // Use custom webhook URL if provided, otherwise fall back to environment variable
-    const baseUrl = customWebhookUrl || process.env.NEXT_PUBLIC_SITE_URL
-
-    if (!baseUrl) {
-      return Response.json(
-        { error: 'Webhook URL not configured. Please provide a custom URL or set NEXT_PUBLIC_SITE_URL in environment.' },
-        { status: 400 }
-      )
-    }
-
-    const webhookUrl = `${baseUrl}${webhookPath}`
+    const webhookUrl = `${customWebhookUrl}${webhookPath}`
 
     // Generate secret token for security
     const secretToken = crypto

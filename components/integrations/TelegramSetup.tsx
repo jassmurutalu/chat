@@ -22,6 +22,11 @@ export default function TelegramSetup({ onClose, orgId }: Props) {
       return
     }
 
+    if (!webhookUrl) {
+      setError('Please enter a webhook URL')
+      return
+    }
+
     setLoading(true)
     setError('')
 
@@ -119,17 +124,18 @@ export default function TelegramSetup({ onClose, orgId }: Props) {
 
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Custom Webhook URL <span className="text-gray-400 font-normal">(Optional)</span>
+                  Webhook URL <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={webhookUrl}
                   onChange={(e) => setWebhookUrl(e.target.value)}
-                  placeholder="https://yourdomain.com (leave empty to use default)"
+                  placeholder="https://yourdomain.com"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  If you want to use a custom domain for webhooks, enter it here. Otherwise, the default from environment will be used.
+                  Enter your domain URL (without the path). Example: https://yourdomain.com
                 </p>
               </div>
 
@@ -141,7 +147,7 @@ export default function TelegramSetup({ onClose, orgId }: Props) {
 
               <button
                 onClick={verifyBot}
-                disabled={loading || !botToken}
+                disabled={loading || !botToken || !webhookUrl}
                 className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? (
@@ -175,12 +181,10 @@ export default function TelegramSetup({ onClose, orgId }: Props) {
                   We'll configure your bot to send messages to your workspace.
                   This happens automatically.
                 </p>
-                {webhookUrl && (
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm font-medium text-blue-900 mb-1">Custom webhook URL will be used:</p>
-                    <code className="text-xs text-blue-700 break-all">{webhookUrl}/api/webhooks/telegram/{orgId}</code>
-                  </div>
-                )}
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-sm font-medium text-blue-900 mb-1">Webhook URL:</p>
+                  <code className="text-xs text-blue-700 break-all">{webhookUrl}/api/webhooks/telegram/{orgId}</code>
+                </div>
               </div>
 
               {error && (
