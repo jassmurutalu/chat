@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getTelegramWebhookInfo } from '@/lib/platforms/telegram'
 
 export async function GET(
@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerSupabaseClient()
 
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
